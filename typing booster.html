@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpeedTypingOnline Replica Pro</title>
+  <style>
+    :root {
+      --f-pinky: #ff7675;
+      --f-ring: #74b9ff;
+      --f-middle: #55efc4;
+      --f-index: #ffeaa7;
+      --f-thumb: #a29bfe;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f4f6f9; padding: 20px; display: flex; justify-content: center; color: #2d3436; }
+    .container { max-width: 900px; width: 100%; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    h1 { text-align: center; margin-bottom: 15px; color: #0984e3; }
+    
+    /* Control Bar */
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between; margin-bottom: 20px; background: #eef5ff; padding: 12px; border-radius: 8px; }
+    select, button, input { padding: 8px 12px; border: 1px solid #dfe6e9; border-radius: 6px; font-size: 0.9rem; outline: none; }
+    button { background: #0984e3; color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
+    button:hover { background: #0769b5; }
+
+    /* Stats Bar */
+    .stats-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; background: #2d3436; color: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+    .stat-box .lbl { font-size: 0.75rem; text-transform: uppercase; color: #b2bec3; font-weight: bold; }
+    .stat-box .val { font-size: 1.4rem; font-weight: bold; color: #00cec9; }
+
+    /* Finger Guide Banner */
+    .finger-guide { background: #fff3bf; border: 1px solid #ffe066; padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: center; font-weight: bold; color: #d9480f; }
+
+    /* Display & Input Box */
+    .text-display { font-family: 'Courier New', monospace; font-size: 1.3rem; line-height: 1.6; border: 2px solid #b2bec3; padding: 15px; border-radius: 8px; min-height: 110px; max-height: 150px; overflow-y: auto; background: #fafafa; margin-bottom: 15px; white-space: pre-wrap; word-break: break-all; }
+    .correct { color: #27ae60; background-color: #d4edda; }
+    .incorrect { color: #e74c3c; background-color: #f8d7da; text-decoration: underline; }
+    .current { background-color: #74b9ff; color: white; border-bottom: 2px solid #0984e3; }
+    
+    #input-field { width: 100%; padding: 12px; font-size: 1.1rem; border: 2px solid #0984e3; border-radius: 6px; margin-bottom: 20px; outline: none; }
+
+    /* Keyboard Layout */
+    .keyboard { background: #353b48; padding: 15px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+    .kb-row { display: flex; gap: 5px; }
+    .key { width: 40px; height: 40px; background: #718093; color: white; display: flex; justify-content: center; align-items: center; border-radius: 4px; font-size: 0.85rem; font-weight: bold; position: relative; }
+    .key.active { border: 3px solid #f1c40f; transform: scale(1.1); box-shadow: 0 0 10px #f1c40f; z-index: 2; }
+    .key-space { width: 220px; }
+
+    /* Finger Color Indicators */
+    .p-left-pinky, .p-right-pinky { background-color: var(--f-pinky) !important; color: #2d3436; }
+    .p-left-ring, .p-right-ring { background-color: var(--f-ring) !important; color: #2d3436; }
+    .p-left-middle, .p-right-middle { background-color: var(--f-middle) !important; color: #2d3436; }
+    .p-left-index, .p-right-index { background-color: var(--f-index) !important; color: #2d3436; }
+    .p-thumb { background-color: var(--f-thumb) !important; color: #2d3436; }
+
+    /* Modal / Certificate Popup */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; }
+    .modal-content { background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 550px; text-align: center; border: 8px solid #0984e3; position: relative; }
+    .certificate-title { font-size: 1.8rem; color: #2d3436; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+    .cert-body { margin: 20px 0; line-height: 1.6; }
+    .cert-stats { display: flex; justify-content: space-around; margin: 15px 0; background: #f1f2f6; padding: 10px; border-radius: 6px; }
+
+    /* Color Legend */
+    .legend { display: flex; justify-content: center; gap: 10px; margin-top: 10px; font-size: 0.75rem; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 4px; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Speed Typing Tutor Pro</h1>
+
+  <!-- Top Controls -->
+  <div class="controls">
+    <div>
+      <label>Lesson: </label>
+      <select id="lesson-select" onchange="changeLesson()">
+        <option value="home">Home Row Practice</option>
+        <option value="top">Top Row Practice</option>
+        <option value="bottom">Bottom Row Practice</option>
+        <option value="numbers">Numbers & Symbols</option>
+        <option value="paragraph" selected>Full Paragraph Test</option>
+      </select>
+    </div>
+    <div>
+      <label>Timer: </label>
+      <select id="timer-select" onchange="resetTest()">
+        <option value="30">30 Sec</option>
+        <option value="60" selected>1 Min</option>
+        <option value="120">2 Min</option>
+        <option value="300">5 Min</option>
+      </select>
+    </div>
+    <button onclick="setCustomText()">Custom Text</button>
+    <button onclick="toggleSound()">Sound: <span id="sound-status">ON</span></button>
+    <button onclick="resetTest()">Restart</button>
+  </div>
+
+  <!-- Live Stats -->
+  <div class="stats-bar">
+    <div class="stat-box"><div class="lbl">Time Left</div><div id="time-val" class="val">60s</div></div>
+    <div class="stat-box"><div class="lbl">Net WPM</div><div id="net-wpm-val" class="val">0</div></div>
+    <div class="stat-box"><div class="lbl">Gross WPM</div><div id="gross-wpm-val" class="val">0</div></div>
+    <div class="stat-box"><div class="lbl">Accuracy</div><div id="acc-val" class="val">100%</div></div>
+    <div class="stat-box"><div class="lbl">Errors</div><div id="err-val" class="val">0</div></div>
+  </div>
+
+  <!-- Animated Finger Guide Indicator -->
+  <div class="finger-guide" id="finger-guide">
+    Finger Guide: Use <span id="target-finger">Left Pinky</span> finger for '<span id="target-char">a</span>'
+  </div>
+
+  <!-- Typing Display & Input -->
+  <div id="text-display" class="text-display"></div>
+  <input type="text" id="input-field" placeholder="Typing yahan shuru karein..." autocomplete="off" autofocus>
+
+  <!-- Virtual Color-Coded Keyboard -->
+  <div class="keyboard">
+    <div class="kb-row" id="row-1"></div>
+    <div class="kb-row" id="row-2"></div>
+    <div class="kb-row" id="row-3"></div>
+    <div class="kb-row" id="row-4"></div>
+  </div>
+
+  <!-- Finger Color Legend -->
+  <div class="legend">
+    <div class="legend-item"><span class="dot" style="background:var(--f-pinky)"></span> Pinky</div>
+    <div class="legend-item"><span class="dot" style="background:var(--f-ring)"></span> Ring</div>
+    <div class="legend-item"><span class="dot" style="background:var(--f-middle)"></span> Middle</div>
+    <div class="legend-item"><span class="dot" style="background:var(--f-index)"></span> Index</div>
+    <div class="legend-item"><span class="dot" style="background:var(--f-thumb)"></span> Thumb</div>
+  </div>
+</div>
+
+<!-- Completion Modal / Certificate -->
+<div class="modal" id="cert-modal">
+  <div class="modal-content">
+    <div class="certificate-title">Typing Result</div>
+    <p>Shabash! Aapne test pura kar liya hai.</p>
+    <div class="cert-body">
+      <div class="cert-stats">
+        <div><strong>Net Speed:</strong> <span id="res-net-wpm">0</span> WPM</div>
+        <div><strong>Accuracy:</strong> <span id="res-acc">0%</span></div>
+        <div><strong>Errors:</strong> <span id="res-err">0</span></div>
+      </div>
+      <p><strong>Most Error-Prone Keys:</strong> <span id="res-problem-keys">None</span></p>
+    </div>
+    <button onclick="closeModal()">Try Again</button>
+    <button onclick="window.print()">Print Result</button>
+  </div>
+</div>
+
+<script>
+  const lessonsData = {
+    home: "asdfg hjkl; asdfg hjkl; a s d f g h j k l ; dad sad fad glad flask falls",
+    top: "qwerty uiop qwerty uiop quit wire type port power quiet tower root",
+    bottom: "zxcvb nm,./ zxcvb nm,./ cab van box man net zinc tax bomb vacuum",
+    numbers: "12345 67890 !@#$% ^&*() 100 250 1999 #2026 $50 100% test!",
+    paragraph: "The quick brown fox jumps over the lazy dog. Continuous typing practice helps build muscle memory, increasing your typing speed and overall accuracy significantly over time."
+  };
+
+  const keyFingerMap = {
+    '1':'Left Pinky','q':'Left Pinky','a':'Left Pinky','z':'Left Pinky',
+    '2':'Left Ring','w':'Left Ring','s':'Left Ring','x':'Left Ring',
+    '3':'Left Middle','e':'Left Middle','d':'Left Middle','c':'Left Middle',
+    '4':'Left Index','r':'Left Index','f':'Left Index','v':'Left Index',
+    '5':'Left Index','t':'Left Index','g':'Left Index','b':'Left Index',
+    '6':'Right Index','y':'Right Index','h':'Right Index','n':'Right Index',
+    '7':'Right Index','u':'Right Index','j':'Right Index','m':'Right Index',
+    '8':'Right Middle','i':'Right Middle','k':'Right Middle',',':'Right Middle',
+    '9':'Right Ring','o':'Right Ring','l':'Right Ring','.':'Right Ring',
+    '0':'Right Pinky','p':'Right Pinky',';':'Right Pinky','/':'Right Pinky',
+    ' ':'Thumb'
+  };
+
+  const keyClassMap = {
+    'Left Pinky':'p-left-pinky', 'Left Ring':'p-left-ring', 'Left Middle':'p-left-middle', 'Left Index':'p-left-index',
+    'Right Index':'p-right-index', 'Right Middle':'p-right-middle', 'Right Ring':'p-right-ring', 'Right Pinky':'p-right-pinky', 'Thumb':'p-thumb'
+  };
+
+  const keysLayout = [
+    ["1","2","3","4","5","6","7","8","9","0"],
+    ["q","w","e","r","t","y","u","i","o","p"],
+    ["a","s","d","f","g","h","j","k","l",";"],
+    ["z","x","c","v","b","n","m",",","."],
+    ["space"]
+  ];
+
+  let timerDuration = 60, timeLeft = 60, timerInterval = null, isStarted = false;
+  let targetText = "", soundEnabled = true, keyErrorCounts = {};
+
+  const textDisplay = document.getElementById('text-display');
+  const inputField = document.getElementById('input-field');
+
+  function renderKeyboard() {
+    keysLayout.forEach((row, i) => {
+      const rowDiv = document.getElementById(`row-${i+1}`);
+      rowDiv.innerHTML = "";
+      row.forEach(k => {
+        const keyDiv = document.createElement('div');
+        const finger = keyFingerMap[k] || 'Thumb';
+        keyDiv.className = `key ${keyClassMap[finger]} ${k === "space" ? "key-space" : ""}`;
+        keyDiv.id = `key-${k === ' ' ? 'space' : k}`;
+        keyDiv.innerText = k === "space" ? "Space" : k.toUpperCase();
+        rowDiv.appendChild(keyDiv);
+      });
+    });
+  }
+
+  function playSound(isError = false) {
+    if (!soundEnabled) return;
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    osc.type = isError ? "sawtooth" : "sine";
+    osc.frequency.setValueAtTime(isError ? 180 : 520, ctx.currentTime);
+    osc.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.04);
+  }
+
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    document.getElementById('sound-status').innerText = soundEnabled ? "ON" : "OFF";
+  }
+
+  function changeLesson() {
+    const val = document.getElementById('lesson-select').value;
+    targetText = lessonsData[val];
+    resetTest();
+  }
+
+  function renderText() {
+    textDisplay.innerHTML = "";
+    targetText.split("").forEach((char, index) => {
+      const span = document.createElement('span');
+      span.innerText = char;
+      if (index === 0) span.classList.add('current');
+      textDisplay.appendChild(span);
+    });
+  }
+
+  function setCustomText() {
+    const userText = prompt("Apna Custom Text paste karein:");
+    if (userText && userText.trim().length > 0) {
+      targetText = userText.trim();
+      resetTest();
+    }
+  }
+
+  function updateFingerGuide(char) {
+    document.querySelectorAll('.key').forEach(k => k.classList.remove('active'));
+    if (!char) return;
+    const lowerChar = char.toLowerCase();
+    const finger = keyFingerMap[lowerChar] || 'Thumb';
+    document.getElementById('target-finger').innerText = finger;
+    document.getElementById('target-char').innerText = char === ' ' ? 'Space' : char;
+
+    const keyId = lowerChar === " " ? "key-space" : `key-${lowerChar}`;
+    const keyEl = document.getElementById(keyId);
+    if (keyEl) keyEl.classList.add('active');
+  }
+
+  inputField.addEventListener('input', () => {
+    if (!isStarted) {
+      startTimer();
+      isStarted = true;
+    }
+
+    const typed = inputField.value;
+    const spans = textDisplay.querySelectorAll('span');
+    let errors = 0;
+
+    spans.forEach((span, i) => {
+      const typedChar = typed[i];
+      span.classList.remove('correct', 'incorrect', 'current');
+
+      if (typedChar == null) {
+        if (i === typed.length) span.classList.add('current');
+      } else if (typedChar === span.innerText) {
+        span.classList.add('correct');
+      } else {
+        span.classList.add('incorrect');
+        errors++;
+        const expectedChar = span.innerText.toLowerCase();
+        keyErrorCounts[expectedChar] = (keyErrorCounts[expectedChar] || 0) + 1;
+      }
+    });
+
+    const isLastCharCorrect = typed[typed.length - 1] === targetText[typed.length - 1];
+    playSound(!isLastCharCorrect);
+
+    // Stats Calculation
+    const totalTyped = typed.length;
+    const correctTyped = totalTyped - errors;
+    const accuracy = totalTyped > 0 ? Math.round((correctTyped / totalTyped) * 100) : 100;
+    const timeSpentMin = (timerDuration - timeLeft) / 60 || 0.01;
+    
+    const grossWPM = Math.round((totalTyped / 5) / timeSpentMin);
+    const netWPM = Math.round(((totalTyped - errors) / 5) / timeSpentMin);
+
+    document.getElementById('err-val').innerText = errors;
+    document.getElementById('acc-val').innerText = `${accuracy}%`;
+    document.getElementById('gross-wpm-val').innerText = grossWPM < 0 ? 0 : grossWPM;
+    document.getElementById('net-wpm-val').innerText = netWPM < 0 ? 0 : netWPM;
+
+    updateFingerGuide(targetText[typed.length]);
+
+    if (typed.length >= targetText.length) {
+      endTest();
+    }
+  });
+
+  function startTimer() {
+    timerInterval = setInterval(() => {
+      if (timeLeft > 0) {
+        timeLeft--;
+        document.getElementById('time-val').innerText = `${timeLeft}s`;
+      } else {
+        endTest();
+      }
+    }, 1000);
+  }
+
+  function endTest() {
+    clearInterval(timerInterval);
+    inputField.disabled = true;
+
+    // Highest Errors Key Calc
+    let sortedKeys = Object.keys(keyErrorCounts).sort((a,b) => keyErrorCounts[b] - keyErrorCounts[a]);
+    let problemKeys = sortedKeys.slice(0, 3).join(", ").toUpperCase() || "None";
+
+    document.getElementById('res-net-wpm').innerText = document.getElementById('net-wpm-val').innerText;
+    document.getElementById('res-acc').innerText = document.getElementById('acc-val').innerText;
+    document.getElementById('res-err').innerText = document.getElementById('err-val').innerText;
+    document.getElementById('res-problem-keys').innerText = problemKeys;
+
+    document.getElementById('cert-modal').style.display = "flex";
+  }
+
+  function closeModal() {
+    document.getElementById('cert-modal').style.display = "none";
+    resetTest();
+  }
+
+  function resetTest() {
+    clearInterval(timerInterval);
+    timerDuration = parseInt(document.getElementById('timer-select').value);
+    timeLeft = timerDuration;
+    isStarted = false;
+    keyErrorCounts = {};
+    
+    document.getElementById('time-val').innerText = `${timeLeft}s`;
+    document.getElementById('net-wpm-val').innerText = "0";
+    document.getElementById('gross-wpm-val').innerText = "0";
+    document.getElementById('acc-val').innerText = "100%";
+    document.getElementById('err-val').innerText = "0";
+    
+    inputField.value = "";
+    inputField.disabled = false;
+    renderText();
+    updateFingerGuide(targetText[0]);
+    inputField.focus();
+  }
+
+  // Init App
+  targetText = lessonsData.paragraph;
+  renderKeyboard();
+  renderText();
+  updateFingerGuide(targetText[0]);
+</script>
+
+</body>
+</html>
